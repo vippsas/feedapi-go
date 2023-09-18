@@ -38,8 +38,8 @@ func Server(publisher EventPublisher) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(routingHandler))
 }
 
-func NewTestZeroEventHubAPI() *TestZeroEventHubAPI {
-	api := TestZeroEventHubAPI{partitions: map[int][]TestEvent{}}
+func NewTestFeedAPI() *TestFeedAPI {
+	api := TestFeedAPI{partitions: map[int][]TestEvent{}}
 	partition0 := make([]TestEvent, 10000)
 	partition1 := make([]TestEvent, 10000)
 	for i := 0; i < 10000; i++ {
@@ -59,11 +59,11 @@ func NewTestZeroEventHubAPI() *TestZeroEventHubAPI {
 	return &api
 }
 
-func (t TestZeroEventHubAPI) GetName() string {
-	return "TestZeroEventHubAPI"
+func (t TestFeedAPI) GetName() string {
+	return "TestFeedAPI"
 }
 
-func (t TestZeroEventHubAPI) GetFeedInfo() FeedInfo {
+func (t TestFeedAPI) GetFeedInfo() FeedInfo {
 	return FeedInfo{
 		Token: "the-token",
 		Partitions: []Partition{
@@ -77,7 +77,7 @@ func (t TestZeroEventHubAPI) GetFeedInfo() FeedInfo {
 	}
 }
 
-func (t TestZeroEventHubAPI) FetchEvents(ctx context.Context, token string, partitionID int, cursor string, receiver EventReceiver, options Options) error {
+func (t TestFeedAPI) FetchEvents(ctx context.Context, token string, partitionID int, cursor string, receiver EventReceiver, options Options) error {
 	if options.PageSizeHint == DefaultPageSize {
 		options.PageSizeHint = 100
 	}

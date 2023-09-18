@@ -8,9 +8,9 @@ import (
 )
 
 func TestAPI_V2_HappyDay_Smoketest(t *testing.T) {
-	server := Server(NewTestZeroEventHubAPI())
+	server := Server(NewTestFeedAPI())
 
-	client := createZehClientWithPartitionCount(server, NoV1Support)
+	client := createClientWithPartitionCount(server, NoV1Support)
 
 	info, err := client.Discover(context.Background())
 	require.NoError(t, err)
@@ -67,14 +67,14 @@ func TestDiscoverEndpoint(t *testing.T) {
 	}
 
 	server := Server(mockFeedInfo{info})
-	client := createZehClientWithPartitionCount(server, NoV1Support)
+	client := createClientWithPartitionCount(server, NoV1Support)
 	gotInfo, err := client.Discover(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, info, gotInfo)
 }
 
 func TestEventsEndpoint(t *testing.T) {
-	server := Server(NewTestZeroEventHubAPI())
+	server := Server(NewTestFeedAPI())
 	tests := []struct {
 		name string
 
@@ -142,7 +142,7 @@ func TestEventsEndpoint(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var page EventPageSingleType[TestEvent]
 
-			client := createZehClientWithPartitionCount(server, NoV1Support)
+			client := createClientWithPartitionCount(server, NoV1Support)
 			err := client.FetchEvents(context.Background(), test.token, test.partitionID, test.cursor, &page, Options{
 				PageSizeHint: test.pageSizeHint,
 			})

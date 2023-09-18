@@ -1,4 +1,4 @@
-module github.com/vippsas/zeroeventhub/go
+module github.com/vippsas/feedapi-go/feedapi
 
 go 1.18
 

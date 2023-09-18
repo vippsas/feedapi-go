@@ -17,12 +17,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createZehClientWithPartitionCount(server *httptest.Server, partitionCount int) Client {
+func createClientWithPartitionCount(server *httptest.Server, partitionCount int) Client {
 	return NewClient(fmt.Sprintf("%s/testfeed", server.URL), partitionCount)
 }
 
-func createZehClient(server *httptest.Server) Client {
-	return createZehClientWithPartitionCount(server, 2)
+func createClient(server *httptest.Server) Client {
+	return createClientWithPartitionCount(server, 2)
 }
 
 type TestEvent struct {
@@ -31,12 +31,12 @@ type TestEvent struct {
 	Cursor  int
 }
 
-type TestZeroEventHubAPI struct {
+type TestFeedAPI struct {
 	partitions map[int][]TestEvent
 }
 
 func TestAPI_V1(t *testing.T) {
-	server := Server(NewTestZeroEventHubAPI())
+	server := Server(NewTestFeedAPI())
 	tests := []struct {
 		name string
 
@@ -102,7 +102,7 @@ func TestAPI_V1(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var client EventFetcher = createZehClientWithPartitionCount(server, test.partitionCount)
+			var client EventFetcher = createClientWithPartitionCount(server, test.partitionCount)
 			var page EventPageSingleType[TestEvent]
 			err := client.FetchEvents(context.Background(), V1Token, test.partitionID, test.cursor, &page, Options{
 				PageSizeHint: test.pageSizeHint,
@@ -134,11 +134,11 @@ func (l *loggingRoundTripper) RoundTrip(request *http.Request) (*http.Response, 
 }
 
 func TestJSON(t *testing.T) {
-	server := Server(NewTestZeroEventHubAPI())
+	server := Server(NewTestFeedAPI())
 	loggingClient := server.Client()
 	loggingRoundTripper := loggingRoundTripper{actualRoundTripper: server.Client().Transport}
 	loggingClient.Transport = &loggingRoundTripper
-	client := createZehClient(server).WithHttpClient(loggingClient)
+	client := createClient(server).WithHttpClient(loggingClient)
 	var page EventPageSingleType[TestEvent]
 	err := client.FetchEvents(context.Background(), V1Token, 0, "9998", &page, Options{})
 	require.NoError(t, err)
@@ -195,11 +195,11 @@ func TestNewLines(t *testing.T) {
 }
 
 func TestRequestProcessor(t *testing.T) {
-	server := Server(NewTestZeroEventHubAPI())
+	server := Server(NewTestFeedAPI())
 	loggingClient := server.Client()
 	loggingRoundTripper := loggingRoundTripper{actualRoundTripper: server.Client().Transport}
 	loggingClient.Transport = &loggingRoundTripper
-	client := createZehClient(server).WithHttpClient(loggingClient).WithRequestProcessor(func(r *http.Request) error {
+	client := createClient(server).WithHttpClient(loggingClient).WithRequestProcessor(func(r *http.Request) error {
 		r.Header.Set("content-type", "application/json")
 		return nil
 	})
@@ -261,8 +261,8 @@ func TestMockResponses(t *testing.T) {
 	h := hookstest.NewLocal(log)
 	logrus.AddHook(h)
 
-	server := httptest.NewServer(MockHandler(nil, NewTestZeroEventHubAPI()))
-	client := createZehClient(server)
+	server := httptest.NewServer(MockHandler(nil, NewTestFeedAPI()))
+	client := createClient(server)
 	var page EventPageSingleType[TestEvent]
 
 	err := client.FetchEvents(context.Background(), V1Token, 0, cursorReturn500, &page, Options{})

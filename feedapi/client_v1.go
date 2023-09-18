@@ -57,7 +57,7 @@ func (c Client) FetchEventsV1(ctx context.Context, partitionID int, cursor strin
 			"requestUrl":   req.URL.String(),
 		}).WithContext(ctx)
 		if all, err := io.ReadAll(res.Body); err != nil {
-			log.WithField("event", "zeroeventhub.res_body_read_error").WithError(err).Error()
+			log.WithField("event", "feedapi.res_body_read_error").WithError(err).Error()
 			return err
 		} else {
 			if string(all) == "\n" || string(all) == "" {
@@ -65,7 +65,7 @@ func (c Client) FetchEventsV1(ctx context.Context, partitionID int, cursor strin
 			} else {
 				err = errors.Errorf("unexpected response body: %s", string(all))
 			}
-			log.WithField("event", "zeroeventhub.unexpected_response_body").WithError(err).Error()
+			log.WithField("event", "feedapi.unexpected_response_body").WithError(err).Error()
 			return err
 		}
 	}
