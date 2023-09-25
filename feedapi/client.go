@@ -60,9 +60,9 @@ func (c Client) WithLogger(logger logrus.FieldLogger) (r Client) {
 
 type Partition struct {
 	Id                   int   `json:"id,string"`
-	Closed               bool  `json:"bool"`
-	StartsAfterPartition int   `json:"startsAfterPartition"`
-	CursorFromPartitions []int `json:"cursorFromPartitions"`
+	Closed               bool  `json:"closed,omitempty"`
+	StartsAfterPartition int   `json:"startsAfterPartition,omitempty"`
+	CursorFromPartitions []int `json:"cursorFromPartitions,omitempty"`
 }
 
 const V1Token = "_v1" // FeedInfo.Token = V1Token indicates to use v1 protocol

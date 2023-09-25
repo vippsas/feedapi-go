@@ -5,13 +5,6 @@ import (
 	"io"
 )
 
-// Envelope contains event headers (standard string map) and the event data (any JSON-serializable struct)
-type Envelope struct {
-	PartitionID int               `json:"partition"`
-	Headers     map[string]string `json:"headers,omitempty"`
-	Data        json.RawMessage   `json:"data,omitempty"`
-}
-
 // NDJSONEventSerializer implements EventReceiver by emitting Newline-Delimited-JSON to a writer.
 type NDJSONEventSerializer struct {
 	encoder *json.Encoder
@@ -49,24 +42,17 @@ var _ EventReceiver = &NDJSONEventSerializer{}
 // The data is stored as json.RawMessage. See EventPageSingleType for a simple way
 // to use a single struct.
 type EventPageRaw struct {
-	Events  []Envelope
-	Cursors map[int]string
+	Events  []json.RawMessage
+	Cursor string
 }
 
-func (page *EventPageRaw) Checkpoint(partitionID int, cursor string) error {
-	if page.Cursors == nil {
-		page.Cursors = make(map[int]string)
-	}
-	page.Cursors[partitionID] = cursor
+func (page *EventPageRaw) Checkpoint(cursor string) error {
+	page.Cursor = cursor
 	return nil
 }
 
-func (page *EventPageRaw) Event(partitionID int, h map[string]string, d json.RawMessage) error {
-	page.Events = append(page.Events, Envelope{
-		PartitionID: partitionID,
-		Headers:     h,
-		Data:        d,
-	})
+func (page *EventPageRaw) Event(d json.RawMessage) error {
+	page.Events = append(page.Events, d)
 	return nil
 }
 
