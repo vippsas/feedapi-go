@@ -64,6 +64,7 @@ func (h HTTPHandlers) DiscoveryHandler(writer http.ResponseWriter, request *http
 	}
 	writer.WriteHeader(http.StatusOK)
 	_, _ = writer.Write(encodedInfo)
+	_, _ = writer.Write([]byte("\n"))
 }
 
 func (h HTTPHandlers) EventsHandler(writer http.ResponseWriter, request *http.Request) {
