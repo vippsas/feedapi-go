@@ -91,7 +91,7 @@ func TestEventsEndpoint(t *testing.T) {
 			token:               "wrong-token",
 			partitionID:         0,
 			cursor:              "qwerty",
-			expectedErrorString: "response code 409, response body: illegal token, please fetch new from discovery endpoint\n",
+			expectedErrorString: ErrRediscoveryNeeded.Error(),
 		},
 		{
 			name:                "wrong cursor",
