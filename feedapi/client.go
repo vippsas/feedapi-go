@@ -24,6 +24,8 @@ type Client struct {
 
 var _ EventFetcher = &Client{}
 
+var ErrRediscoveryNeeded = errors.New("token changed, client needs to re-start consumption process and call Discover again; the number of partitions could potentially be changed")
+
 // NewClient is a constructor for the Client. The partitionCount parameter says how many partitions to expect
 // in the V1 protocol; if you do not wish to support the V1 protocol you may pass `NoV1Support`
 func NewClient(url string, partitionCount int) Client {
@@ -170,7 +172,10 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 		_ = body.Close()
 	}(res.Body)
 
-	if res.StatusCode/100 != 2 {
+	if res.StatusCode == http.StatusConflict {
+		c.logger.WithField("event", "feedapi.token.conflict").Info()
+		return ErrRediscoveryNeeded
+	} else if res.StatusCode/100 != 2 {
 		log := c.logger.WithFields(logrus.Fields{
 			"responseCode": strconv.Itoa(res.StatusCode),
 			"requestUrl":   req.URL.String(),
