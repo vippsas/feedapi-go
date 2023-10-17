@@ -27,11 +27,6 @@ func TestAPI_V2_HappyDay_Smoketest(t *testing.T) {
 		Version: 0,
 		Cursor:  9999,
 	}, page.Events[0])
-
-	// Tack on a test of the handling of 409 error.
-	// TODO: Table-based thorough testing of FetchEvents
-	err = client.FetchEvents(context.Background(), "another-token", info.Partitions[0].Id, "9998", &page, Options{})
-	assert.Equal(t, ErrRediscoveryNeeded, err)
 }
 
 type mockFeedInfo struct {
@@ -96,7 +91,7 @@ func TestEventsEndpoint(t *testing.T) {
 			token:               "wrong-token",
 			partitionID:         0,
 			cursor:              "qwerty",
-			expectedErrorString: "response code 409, response body: illegal token, please fetch new from discovery endpoint\n",
+			expectedErrorString: ErrRediscoveryNeeded.Error(),
 		},
 		{
 			name:                "wrong cursor",
