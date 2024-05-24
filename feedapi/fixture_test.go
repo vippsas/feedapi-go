@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
 )
 
 var logger *logrus.Logger
@@ -36,6 +37,10 @@ func Server(publisher EventPublisher) *httptest.Server {
 	}
 
 	return httptest.NewServer(http.HandlerFunc(routingHandler))
+}
+
+type TestFeedAPI struct {
+	partitions map[int][]TestEvent
 }
 
 func NewTestFeedAPI() *TestFeedAPI {

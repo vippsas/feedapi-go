@@ -31,12 +31,9 @@ type TestEvent struct {
 	Cursor  int
 }
 
-type TestFeedAPI struct {
-	partitions map[int][]TestEvent
-}
-
 func TestAPI_V1(t *testing.T) {
 	server := Server(NewTestFeedAPI())
+	defer server.Close()
 	tests := []struct {
 		name string
 
@@ -116,6 +113,35 @@ func TestAPI_V1(t *testing.T) {
 	}
 }
 
+func TestZEHCompatability(t *testing.T) {
+	// In ZeroEventHub there was support for multiple cursors; and the cursor ID was part of the response
+	// back. In ZEH-mode we need to keep this part of the data in. We do this test on a low level with raw
+	// HTTP response comparison as we don't want to add a dependency on the zeroeventhub client to the feedapi library,
+	// and the FeedAPI ZEH client removes the (redundant) partitionID data from the response
+	server := Server(NewTestFeedAPI())
+	defer server.Close()
+
+	client := server.Client()
+
+	resp, err := client.Get(server.URL + "/testfeed?n=2&cursor1=_first&pagesizehint=5")
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	buf, err := io.ReadAll(resp.Body)
+	require.Equal(t, `{"data":{"ID":"11111111-0000-0000-0000-000000000000","Version":0,"Cursor":0},"partition":1}
+{"cursor":"0","partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000001","Version":0,"Cursor":1},"partition":1}
+{"cursor":"1","partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000002","Version":0,"Cursor":2},"partition":1}
+{"cursor":"2","partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000003","Version":0,"Cursor":3},"partition":1}
+{"cursor":"3","partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000004","Version":0,"Cursor":4},"partition":1}
+{"cursor":"4","partition":1}
+`, string(buf))
+}
+
 type loggingRoundTripper struct {
 	actualRoundTripper http.RoundTripper
 	requestHeaders     http.Header
@@ -135,6 +161,7 @@ func (l *loggingRoundTripper) RoundTrip(request *http.Request) (*http.Response, 
 
 func TestJSON(t *testing.T) {
 	server := Server(NewTestFeedAPI())
+	defer server.Close()
 	loggingClient := server.Client()
 	loggingRoundTripper := loggingRoundTripper{actualRoundTripper: server.Client().Transport}
 	loggingClient.Transport = &loggingRoundTripper
@@ -142,8 +169,8 @@ func TestJSON(t *testing.T) {
 	var page EventPageSingleType[TestEvent]
 	err := client.FetchEvents(context.Background(), V1Token, 0, "9998", &page, Options{})
 	require.NoError(t, err)
-	require.Equal(t, `{"data":{"ID":"00000000-0000-0000-0000-00000000270f","Version":0,"Cursor":9999}}
-{"cursor":"9999"}
+	require.Equal(t, `{"data":{"ID":"00000000-0000-0000-0000-00000000270f","Version":0,"Cursor":9999},"partition":0}
+{"cursor":"9999","partition":0}
 `, loggingRoundTripper.response)
 	fmt.Print(loggingRoundTripper.response)
 }
