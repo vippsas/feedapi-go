@@ -57,7 +57,7 @@ func (h HTTPHandlers) ZeroEventHubV1Handler(writer http.ResponseWriter, request 
 		WithField("PageSizeHint", pageSizeHint).
 		WithField("Headers", headers)
 	fields.Info()
-	serializer := NewNDJSONEventSerializer(writer)
+	serializer := NewNDJSONEventSerializerV1(partitionID, writer)
 	err := h.eventPublisher.FetchEvents(request.Context(), "", partitionID, cursor, serializer, Options{
 		PageSizeHint: pageSizeHint,
 	})
