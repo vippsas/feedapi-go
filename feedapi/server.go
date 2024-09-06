@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // EventPublisher is a generic-based interface that has to be implemented on a server side.
@@ -102,16 +103,24 @@ func (h HTTPHandlers) EventsHandler(writer http.ResponseWriter, request *http.Re
 	}
 	cursor := query.Get("cursor")
 
+	var eventTypes []string = nil
+	if query.Has("event-types") {
+		eventTypes = strings.Split(query.Get("event-types"), ";")
+	}
+
 	fields := logger.
 		WithField("event", h.eventPublisher.GetName()).
 		WithField("PartitionCount", partitionCount).
 		WithField("partitionID", partitionId).
 		WithField("cursors", cursor).
-		WithField("PageSizeHint", pageSizeHint)
+		WithField("PageSizeHint", pageSizeHint).
+		WithField("EventTypes", eventTypes)
+
 	fields.Info()
 	serializer := NewNDJSONEventSerializer(writer)
 	err = h.eventPublisher.FetchEvents(request.Context(), "", partitionId, cursor, serializer, Options{
 		PageSizeHint: pageSizeHint,
+		EventTypes:   eventTypes,
 	})
 	if err != nil {
 		logger.WithField("publisherName", h.eventPublisher.GetName()).

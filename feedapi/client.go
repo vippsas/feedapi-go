@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Client struct is a generic-based client-side implementation of the EventFetcher interface.
@@ -155,6 +156,9 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 	q.Add("cursor", cursor)
 	if options.PageSizeHint != DefaultPageSize {
 		q.Add("pagesizehint", fmt.Sprintf("%d", options.PageSizeHint))
+	}
+	if options.EventTypes != nil {
+		q.Add("event-types", strings.Join(options.EventTypes, ";"))
 	}
 
 	req.URL.RawQuery = q.Encode()

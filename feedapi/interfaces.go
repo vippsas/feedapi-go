@@ -33,6 +33,7 @@ type EventReceiver interface {
 
 type Options struct {
 	PageSizeHint int
+	EventTypes   []string
 }
 
 // EventFetcher is a generic-based interface providing a contract for fetching events: both for the server side and
