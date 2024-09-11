@@ -26,6 +26,7 @@ func TestAPI_V2_HappyDay_Smoketest(t *testing.T) {
 		ID:      "00000000-0000-0000-0000-00000000270f",
 		Version: 0,
 		Cursor:  9999,
+		Type:    "PaymentCaptured",
 	}, page.Events[0])
 }
 
@@ -80,6 +81,7 @@ func TestEventsEndpoint(t *testing.T) {
 
 		token        string
 		pageSizeHint int
+		EventTypes   []string
 		partitionID  int
 		cursor       string
 
@@ -145,12 +147,65 @@ func TestEventsEndpoint(t *testing.T) {
 			client := createClientWithPartitionCount(server, NoV1Support)
 			err := client.FetchEvents(context.Background(), test.token, test.partitionID, test.cursor, &page, Options{
 				PageSizeHint: test.pageSizeHint,
+				EventTypes:   test.EventTypes,
 			})
 			if err == nil {
 				require.Equal(t, test.expectedEvents, len(page.Events))
 			} else {
 				require.Equal(t, test.expectedErrorString, err.Error())
 			}
+		})
+	}
+}
+
+/*
+Given 10.000 events, 5000 per partition.
+Half of each is payment captured, and half is payment cancelled.
+*/
+func TestEventsEndpoint_Given_Optional_EventFilter(t *testing.T) {
+	server := Server(NewTestFeedAPI())
+	tests := []struct {
+		name           string
+		EventTypes     []string
+		expectedEvents int
+	}{
+		{
+			name:           "some matched events",
+			EventTypes:     []string{"PaymentCaptured"},
+			expectedEvents: 5000,
+		},
+		{
+			name:           "all events matched",
+			EventTypes:     []string{"PaymentCaptured", "PaymentCancelled"},
+			expectedEvents: 10000,
+		},
+		{
+			name:           "no matched events 1",
+			EventTypes:     []string{"Unknown Event Type"},
+			expectedEvents: 0,
+		},
+		{
+			name:           "no matched events 2",
+			EventTypes:     []string{},
+			expectedEvents: 0,
+		},
+		{
+			name:           "all events matched by default",
+			EventTypes:     nil,
+			expectedEvents: 10000,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var page EventPageSingleType[TestEvent]
+
+			client := createClientWithPartitionCount(server, NoV1Support)
+			_ = client.FetchEvents(context.Background(), "the-token", 0, FirstCursor, &page, Options{
+				PageSizeHint: 10000,
+				EventTypes:   test.EventTypes,
+			})
+
+			require.Equal(t, test.expectedEvents, len(page.Events))
 		})
 	}
 }

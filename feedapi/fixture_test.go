@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -47,16 +48,32 @@ func NewTestFeedAPI() *TestFeedAPI {
 	api := TestFeedAPI{partitions: map[int][]TestEvent{}}
 	partition0 := make([]TestEvent, 10000)
 	partition1 := make([]TestEvent, 10000)
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 5000; i++ {
 		partition0[i] = TestEvent{
 			ID:      fmt.Sprintf("00000000-0000-0000-0000-%012x", i),
 			Version: 0,
 			Cursor:  i,
+			Type:    "PaymentCaptured",
 		}
 		partition1[i] = TestEvent{
 			ID:      fmt.Sprintf("11111111-0000-0000-0000-%012x", i),
 			Version: 0,
 			Cursor:  i,
+			Type:    "PaymentCaptured",
+		}
+	}
+	for i := 5000; i < 10000; i++ {
+		partition0[i] = TestEvent{
+			ID:      fmt.Sprintf("00000000-0000-0000-0000-%012x", i),
+			Version: 0,
+			Cursor:  i,
+			Type:    "PaymentCancelled",
+		}
+		partition1[i] = TestEvent{
+			ID:      fmt.Sprintf("11111111-0000-0000-0000-%012x", i),
+			Version: 0,
+			Cursor:  i,
+			Type:    "PaymentCancelled",
 		}
 	}
 	api.partitions[0] = partition0
@@ -111,9 +128,12 @@ func (t TestFeedAPI) FetchEvents(ctx context.Context, token string, partitionID 
 	eventsProcessed := 0
 	for _, event := range partition {
 		if event.Cursor > lastProcessedCursor {
-			if err := receiver.Event(mustMarshalJson(partition[event.Cursor])); err != nil {
-				return err
+			if options.EventTypes == nil || slices.Contains(options.EventTypes, event.Type) {
+				if err := receiver.Event(mustMarshalJson(partition[event.Cursor])); err != nil {
+					return err
+				}
 			}
+
 			if err := receiver.Checkpoint(fmt.Sprintf("%d", event.Cursor)); err != nil {
 				return err
 			}

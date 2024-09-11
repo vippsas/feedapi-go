@@ -29,6 +29,7 @@ type TestEvent struct {
 	ID      string
 	Version int
 	Cursor  int
+	Type    string
 }
 
 func TestAPI_V1(t *testing.T) {
