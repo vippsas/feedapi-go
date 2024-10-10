@@ -3,11 +3,12 @@ package feedapi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // EventPublisher is a generic-based interface that has to be implemented on a server side.
@@ -125,7 +126,7 @@ func (h HTTPHandlers) EventsHandler(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		logger.WithField("publisherName", h.eventPublisher.GetName()).
 			WithField("event", "feedapi.server.fetch_events_error").WithError(err).Info()
-		http.Error(writer, "Internal server error", http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
