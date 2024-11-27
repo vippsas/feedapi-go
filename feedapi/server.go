@@ -100,6 +100,7 @@ func (h HTTPHandlers) EventsHandler(writer http.ResponseWriter, request *http.Re
 
 	if !query.Has("cursor") {
 		http.Error(writer, "no cursor argument", http.StatusBadRequest)
+		return
 	}
 	cursor := query.Get("cursor")
 
