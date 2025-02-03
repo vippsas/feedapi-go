@@ -62,7 +62,7 @@ func (h HTTPHandlers) ZeroEventHubV1Handler(writer http.ResponseWriter, request 
 		PageSizeHint: pageSizeHint,
 	})
 	if err != nil {
-		logger.WithField("event", h.eventPublisher.GetName()+".fetch_events_error").WithError(err).Info()
+		logger.WithField("event", h.eventPublisher.GetName()+".fetch_events_error").WithError(err).Warning()
 		http.Error(writer, "Internal server error", http.StatusInternalServerError)
 		return
 	}
