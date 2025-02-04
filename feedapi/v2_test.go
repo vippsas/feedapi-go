@@ -2,9 +2,10 @@ package feedapi
 
 import (
 	"context"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAPI_V2_HappyDay_Smoketest(t *testing.T) {
@@ -100,7 +101,7 @@ func TestEventsEndpoint(t *testing.T) {
 			token:               "the-token",
 			partitionID:         0,
 			cursor:              "qwerty",
-			expectedErrorString: "response code 500, response body: Internal server error\n",
+			expectedErrorString: "response code 500, empty response body",
 		},
 		{
 			name:           "out of range cursor",
