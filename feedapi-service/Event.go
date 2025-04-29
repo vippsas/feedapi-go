@@ -1,4 +1,4 @@
-package eventprocessor
+package feedapi_service
 
 import (
 	"github.com/goccy/go-json"
