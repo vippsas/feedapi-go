@@ -6,12 +6,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // Client struct is a generic-based client-side implementation of the EventFetcher interface.
@@ -180,12 +181,7 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 		c.logger.WithField("event", "feedapi.token.conflict").Info()
 		return ErrRediscoveryNeeded
 	} else if res.StatusCode/100 != 2 {
-		log := c.logger.WithFields(logrus.Fields{
-			"responseCode": strconv.Itoa(res.StatusCode),
-			"requestUrl":   req.URL.String(),
-		}).WithContext(ctx)
 		if all, err := io.ReadAll(res.Body); err != nil {
-			log.WithField("event", "feedapi.res_body_read_error").WithError(err).Error()
 			return err
 		} else {
 			if string(all) == "\n" || string(all) == "" {
@@ -193,7 +189,6 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 			} else {
 				err = errors.Errorf("response code %d, response body: %s", res.StatusCode, string(all))
 			}
-			log.WithField("event", "feedapi.unexpected_response_body").WithError(err).Error()
 			return err
 		}
 	}
