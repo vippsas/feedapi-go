@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -120,13 +120,13 @@ func (c Client) Discover(ctx context.Context) (FeedInfo, error) {
 		if len(responseBody) > 1000 {
 			responseBody = responseBody[:1000]
 		}
-		return FeedInfo{}, errors.Errorf("Unexpected status code: %d. Response body: %s", res.StatusCode, responseBody)
+		return FeedInfo{}, fmt.Errorf("unexpected status code: %d. Response body: %s", res.StatusCode, responseBody)
 	}
 
 	var info FeedInfo
 	err = json.Unmarshal(responseBody, &info)
 	if err != nil {
-		return FeedInfo{}, errors.Errorf("Failed to unmarshal FeedAPI response, error=%s, response=%s", err, responseBody)
+		return FeedInfo{}, fmt.Errorf("failed to unmarshal FeedAPI response, error=%s, response=%s", err, responseBody)
 	}
 
 	return info, nil
@@ -185,9 +185,9 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 			return err
 		} else {
 			if string(all) == "\n" || string(all) == "" {
-				err = errors.Errorf("response code %d, empty response body", res.StatusCode)
+				err = fmt.Errorf("response code %d, empty response body", res.StatusCode)
 			} else {
-				err = errors.Errorf("response code %d, response body: %s", res.StatusCode, string(all))
+				err = fmt.Errorf("response code %d, response body: %s", res.StatusCode, string(all))
 			}
 			return err
 		}
