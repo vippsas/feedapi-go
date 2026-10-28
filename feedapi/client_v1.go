@@ -71,6 +71,7 @@ func (c Client) FetchEventsV1(ctx context.Context, partitionID int, cursor strin
 	}
 
 	scanner := bufio.NewScanner(res.Body)
+	scanner.Buffer(make([]byte, 64*1024), maxFeedLineBytes)
 	for scanner.Scan() {
 		line := bytes.TrimSpace(scanner.Bytes())
 		if len(line) == 0 {
@@ -96,5 +97,5 @@ func (c Client) FetchEventsV1(ctx context.Context, partitionID int, cursor strin
 		}
 	}
 
-	return nil
+	return scanner.Err()
 }

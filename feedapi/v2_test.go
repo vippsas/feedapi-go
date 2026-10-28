@@ -26,7 +26,7 @@ func TestAPI_V2_HappyDay_Smoketest(t *testing.T) {
 		ID:      "00000000-0000-0000-0000-00000000270f",
 		Version: 0,
 		Cursor:  9999,
-		Type:    "PaymentCaptured",
+		Type:    "PaymentCancelled",
 	}, page.Events[0])
 }
 
