@@ -72,6 +72,10 @@ type Partition struct {
 const V1Token = "_v1" // FeedInfo.Token = V1Token indicates to use v1 protocol
 const NoV1Support = 0
 
+// Keep line buffering bounded while supporting events larger than Scanner's
+// 64 KiB default (for example, events containing upstream response bodies).
+const maxFeedLineBytes = 8 * 1024 * 1024
+
 type FeedInfo struct {
 	Token       string      `json:"token"`
 	Partitions  []Partition `json:"partitions"`
@@ -194,6 +198,7 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 	}
 
 	scanner := bufio.NewScanner(res.Body)
+	scanner.Buffer(make([]byte, 64*1024), maxFeedLineBytes)
 	for scanner.Scan() {
 		line := bytes.TrimSpace(scanner.Bytes())
 		if len(line) == 0 {
@@ -219,5 +224,5 @@ func (c Client) FetchEvents(ctx context.Context, token string, partitionID int, 
 		}
 	}
 
-	return nil
+	return scanner.Err()
 }

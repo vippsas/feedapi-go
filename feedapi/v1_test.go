@@ -130,15 +130,15 @@ func TestZEHCompatability(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	buf, err := io.ReadAll(resp.Body)
-	require.Equal(t, `{"data":{"ID":"11111111-0000-0000-0000-000000000000","Version":0,"Cursor":0},"partition":1}
+	require.Equal(t, `{"data":{"ID":"11111111-0000-0000-0000-000000000000","Version":0,"Cursor":0,"Type":"PaymentCaptured"},"partition":1}
 {"cursor":"0","partition":1}
-{"data":{"ID":"11111111-0000-0000-0000-000000000001","Version":0,"Cursor":1},"partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000001","Version":0,"Cursor":1,"Type":"PaymentCaptured"},"partition":1}
 {"cursor":"1","partition":1}
-{"data":{"ID":"11111111-0000-0000-0000-000000000002","Version":0,"Cursor":2},"partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000002","Version":0,"Cursor":2,"Type":"PaymentCaptured"},"partition":1}
 {"cursor":"2","partition":1}
-{"data":{"ID":"11111111-0000-0000-0000-000000000003","Version":0,"Cursor":3},"partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000003","Version":0,"Cursor":3,"Type":"PaymentCaptured"},"partition":1}
 {"cursor":"3","partition":1}
-{"data":{"ID":"11111111-0000-0000-0000-000000000004","Version":0,"Cursor":4},"partition":1}
+{"data":{"ID":"11111111-0000-0000-0000-000000000004","Version":0,"Cursor":4,"Type":"PaymentCaptured"},"partition":1}
 {"cursor":"4","partition":1}
 `, string(buf))
 }
@@ -170,7 +170,7 @@ func TestJSON(t *testing.T) {
 	var page EventPageSingleType[TestEvent]
 	err := client.FetchEvents(context.Background(), V1Token, 0, "9998", &page, Options{})
 	require.NoError(t, err)
-	require.Equal(t, `{"data":{"ID":"00000000-0000-0000-0000-00000000270f","Version":0,"Cursor":9999},"partition":0}
+	require.Equal(t, `{"data":{"ID":"00000000-0000-0000-0000-00000000270f","Version":0,"Cursor":9999,"Type":"PaymentCancelled"},"partition":0}
 {"cursor":"9999","partition":0}
 `, loggingRoundTripper.response)
 	fmt.Print(loggingRoundTripper.response)
